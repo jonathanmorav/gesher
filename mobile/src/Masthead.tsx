@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useState } from "react";
 import { formatIsraelClock } from "./gesher";
 import { useLocale } from "./locale";
+import { usePhoneFrame } from "./PhonePreview";
 import { color, font, radius } from "./theme";
 
 export type ScreenId = "news" | "podcasts";
@@ -10,6 +11,7 @@ export type ScreenId = "news" | "podcasts";
 export function Masthead({ screen, onScreen }: { screen: ScreenId; onScreen: (screen: ScreenId) => void }) {
   const { locale, rtl, setLocale, t } = useLocale();
   const insets = useSafeAreaInsets();
+  const framed = usePhoneFrame();
   const [clock, setClock] = useState(() => formatIsraelClock(new Date(), locale));
 
   useEffect(() => {
@@ -20,15 +22,17 @@ export function Masthead({ screen, onScreen }: { screen: ScreenId; onScreen: (sc
   }, [locale]);
 
   return (
-    <View style={[styles.wrap, { paddingTop: Math.max(insets.top, 8) }]}>
-      <View style={[styles.brandRow, rtl && styles.rowRtl]}>
-        <View style={styles.brandCopy}>
-          <Text style={[styles.wordmark, rtl && styles.rtlText]}>גשר</Text>
-          <Text style={[styles.tag, rtl && styles.rtlText]} numberOfLines={2}>
-            {t("tagline")}
+    <View style={[styles.wrap, { paddingTop: Math.max(insets.top, framed ? 54 : 16) }]}>
+      <View style={styles.brand}>
+        <View style={[styles.brandRow, rtl && styles.rowRtl]}>
+          <Text style={styles.wordmark} numberOfLines={1}>
+            גשר
           </Text>
+          <Text style={styles.clock}>{clock.time}</Text>
         </View>
-        <Text style={styles.clock}>{clock.time}</Text>
+        <Text style={[styles.tag, rtl && styles.rtlText]} numberOfLines={2}>
+          {t("tagline")}
+        </Text>
       </View>
 
       <View style={[styles.tools, rtl && styles.rowRtl]}>
@@ -65,9 +69,13 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     gap: 14,
   },
+  brand: {
+    gap: 6,
+  },
   brandRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "baseline",
+    justifyContent: "space-between",
     gap: 16,
   },
   rowRtl: {
@@ -76,19 +84,15 @@ const styles = StyleSheet.create({
   rtlText: {
     textAlign: "right",
   },
-  brandCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
   wordmark: {
     fontFamily: font.displayHe,
-    fontSize: 34,
-    lineHeight: 36,
-    letterSpacing: 0.68,
+    fontSize: 28,
+    lineHeight: 32,
+    letterSpacing: 0.4,
     color: color.paper,
+    flexShrink: 0,
   },
   tag: {
-    marginTop: 4,
     color: color.fog,
     fontFamily: font.sans,
     fontSize: 11,
