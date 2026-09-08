@@ -10,6 +10,9 @@ export function SiteShell({
 }) {
   return (
     <main className="page">
+      <aside className="spine" aria-hidden="true">
+        <span>גשר</span>
+      </aside>
       {children}
       <SiteFooter kind={footer} />
     </main>
