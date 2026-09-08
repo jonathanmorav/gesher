@@ -528,8 +528,9 @@ const styles = StyleSheet.create({
   heroTitle: {
     color: color.paper,
     fontSize: 40,
-    lineHeight: 36,
+    lineHeight: 44,
     letterSpacing: 0.4,
+    paddingTop: 4,
   },
   heroDek: {
     color: color.fog,

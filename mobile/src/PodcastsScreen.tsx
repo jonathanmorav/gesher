@@ -156,7 +156,10 @@ export function PodcastsScreen() {
             <View key={episode.id} style={[styles.row, rtl && styles.rowRtl, selected && podcastPlaying && styles.rowLive]}>
               <Text style={styles.rank}>{String(index + 1).padStart(2, "0")}</Text>
               <Pressable style={styles.rowCopy} onPress={() => setOpenId(episode.id)}>
-                <Text style={[styles.rowTitle, { fontFamily: sansFamily(text.title, "bold"), textAlign: align }]}>
+                <Text
+                  style={[styles.rowTitle, { fontFamily: sansFamily(text.title, "bold"), textAlign: align }]}
+                  numberOfLines={3}
+                >
                   {text.title}
                 </Text>
                 <Text style={styles.byline}>{podcastName(show, locale)}</Text>

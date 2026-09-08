@@ -22,10 +22,9 @@ export function Masthead({ screen, onScreen }: { screen: ScreenId; onScreen: (sc
   return (
     <View style={[styles.wrap, { paddingTop: Math.max(insets.top, 8) }]}>
       <View style={[styles.brandRow, rtl && styles.rowRtl]}>
-        <Text style={styles.spine}>גשר</Text>
         <View style={styles.brandCopy}>
           <Text style={[styles.wordmark, rtl && styles.rtlText]}>גשר</Text>
-          <Text style={[styles.tag, rtl && styles.rtlText]} numberOfLines={1}>
+          <Text style={[styles.tag, rtl && styles.rtlText]} numberOfLines={2}>
             {t("tagline")}
           </Text>
         </View>
@@ -68,23 +67,14 @@ const styles = StyleSheet.create({
   },
   brandRow: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
+    alignItems: "flex-start",
+    gap: 16,
   },
   rowRtl: {
     flexDirection: "row-reverse",
   },
   rtlText: {
     textAlign: "right",
-  },
-  spine: {
-    color: color.paper,
-    fontFamily: font.displayHe,
-    fontSize: 28,
-    lineHeight: 28,
-    letterSpacing: 1,
-    width: 28,
-    textAlign: "center",
   },
   brandCopy: {
     flex: 1,
@@ -93,7 +83,7 @@ const styles = StyleSheet.create({
   wordmark: {
     fontFamily: font.displayHe,
     fontSize: 34,
-    lineHeight: 34,
+    lineHeight: 36,
     letterSpacing: 0.68,
     color: color.paper,
   },

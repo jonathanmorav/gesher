@@ -14,6 +14,7 @@ import { AudioHub } from "./src/audio";
 import { LocaleProvider } from "./src/locale";
 import { Masthead, type ScreenId } from "./src/Masthead";
 import { NewsScreen } from "./src/NewsScreen";
+import { IPHONE_SAFE_METRICS, PhonePreview, usePhoneFrame } from "./src/PhonePreview";
 import { PodcastsScreen } from "./src/PodcastsScreen";
 import { RadioDock } from "./src/RadioDock";
 import { color } from "./src/theme";
@@ -52,10 +53,12 @@ export default function App() {
     if (loaded) void SplashScreen.hideAsync();
   }, [loaded]);
 
+  const framed = usePhoneFrame();
+
   if (!loaded) return null;
 
-  return (
-    <SafeAreaProvider>
+  const tree = (
+    <SafeAreaProvider initialMetrics={framed ? IPHONE_SAFE_METRICS : undefined}>
       <LocaleProvider>
         <AudioHub>
           <Root />
@@ -63,6 +66,8 @@ export default function App() {
       </LocaleProvider>
     </SafeAreaProvider>
   );
+
+  return framed ? <PhonePreview>{tree}</PhonePreview> : tree;
 }
 
 const styles = StyleSheet.create({
