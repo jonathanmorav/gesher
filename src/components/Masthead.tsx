@@ -23,7 +23,6 @@ export function Masthead() {
     <header className="masthead">
       <div className="masthead-inner">
         <Link href="/" className="brand-lockup">
-          <span className="brand-mark">ג</span>
           <span className="brand-text">
             <strong className="wordmark">גשר</strong>
             <span className="brand-tag">{t("tagline")}</span>
