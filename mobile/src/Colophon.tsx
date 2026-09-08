@@ -12,7 +12,7 @@ export function Colophon({ kind }: { kind: "news" | "podcasts" }) {
       <View style={styles.wrap}>
         <Text style={[styles.text, rtl && styles.rtl]}>{t("podcastsColophon")}</Text>
         <View style={[styles.line, rtl && styles.rowRtl]}>
-          <Text style={styles.text}>{t("shows")}: </Text>
+          <Text style={styles.label}>{t("shows")}</Text>
           {PODCASTS.map((show, index) => (
             <Pressable key={show.id} onPress={() => void openUrl(show.homepage)}>
               <Text style={styles.link}>
@@ -30,7 +30,7 @@ export function Colophon({ kind }: { kind: "news" | "podcasts" }) {
     <View style={styles.wrap}>
       <Text style={[styles.text, rtl && styles.rtl]}>{t("colophon")}</Text>
       <View style={[styles.line, rtl && styles.rowRtl]}>
-        <Text style={styles.text}>{t("sources")}: </Text>
+        <Text style={styles.label}>{t("sources")}</Text>
         {SOURCES.map((source, index) => (
           <Pressable key={source.id} onPress={() => void openUrl(source.homepage)}>
             <Text style={styles.link}>
@@ -46,18 +46,19 @@ export function Colophon({ kind }: { kind: "news" | "podcasts" }) {
 
 const styles = StyleSheet.create({
   wrap: {
-    marginTop: 12,
+    marginTop: 28,
     paddingHorizontal: 16,
-    paddingTop: 18,
+    paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: color.line,
-    gap: 8,
+    borderTopColor: color.iron,
+    gap: 10,
   },
   text: {
-    color: color.mute,
-    fontFamily: font.sans,
-    fontSize: 13,
-    lineHeight: 20,
+    color: color.fog,
+    fontFamily: font.serif,
+    fontSize: 16,
+    lineHeight: 21,
+    letterSpacing: -0.16,
   },
   rtl: {
     textAlign: "right",
@@ -69,11 +70,22 @@ const styles = StyleSheet.create({
   line: {
     flexDirection: "row",
     flexWrap: "wrap",
+    alignItems: "center",
+    gap: 4,
+  },
+  label: {
+    color: color.mint,
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
+    marginEnd: 6,
   },
   link: {
-    color: color.inkSoft,
-    fontFamily: font.sans,
-    fontSize: 13,
-    textDecorationLine: "underline",
+    color: color.silver,
+    fontFamily: font.sansMedium,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
   },
 });

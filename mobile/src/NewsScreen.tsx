@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -26,15 +27,19 @@ import {
 } from "./gesher";
 import { useLocale } from "./locale";
 import { openUrl } from "./open";
-import { color, font } from "./theme";
+import { color, displayFamily, font, radius, sansFamily } from "./theme";
 import { Colophon } from "./Colophon";
 
-function takeHero(items: Headline[]): { hero: Headline[]; rest: Headline[] } {
+function splitFeed(items: Headline[]) {
   const withPhoto = items.filter((item) => item.imageUrl);
-  const without = items.filter((item) => !item.imageUrl);
-  const picks = [...withPhoto, ...without].slice(0, Math.min(4, items.length));
-  const used = new Set(picks.map((item) => item.id));
-  return { hero: picks, rest: items.filter((item) => !used.has(item.id)) };
+  const hero = withPhoto[0] ?? items[0];
+  const used = new Set(hero ? [hero.id] : []);
+  const top = items.filter((item) => !used.has(item.id)).slice(0, 5);
+  top.forEach((item) => used.add(item.id));
+  const popular = items.filter((item) => !used.has(item.id)).slice(0, 5);
+  popular.forEach((item) => used.add(item.id));
+  const rest = items.filter((item) => !used.has(item.id));
+  return { hero, top, popular, rest };
 }
 
 export function NewsScreen() {
@@ -60,17 +65,7 @@ export function NewsScreen() {
     return active === "all" ? payload.headlines : payload.headlines.filter((item) => item.topic === active);
   }, [active, payload]);
 
-  const { hero, rest } = useMemo(() => takeHero(filtered), [filtered]);
-
-  const sections = useMemo(() => {
-    if (active !== "all") return [];
-    return TOPICS.map((topic) => ({
-      topic: topic.id,
-      items: rest.filter((item) => item.topic === topic.id),
-    })).filter((section) => section.items.length > 0);
-  }, [active, rest]);
-
-  const leftover = active === "all" ? [] : rest;
+  const { hero, top, popular, rest } = useMemo(() => splitFeed(filtered), [filtered]);
 
   const topicCounts = useMemo(() => {
     const counts = Object.fromEntries(TOPICS.map((topic) => [topic.id, 0])) as Record<TopicId, number>;
@@ -129,7 +124,7 @@ export function NewsScreen() {
   if (!payload) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color={color.red} />
+        <ActivityIndicator color={color.mint} />
       </View>
     );
   }
@@ -138,9 +133,9 @@ export function NewsScreen() {
     <ScrollView
       style={styles.scroll}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={color.red} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={color.mint} />}
     >
-      <View style={[styles.toolbar, rtl && styles.toolbarRtl]}>
+      <View style={styles.toolbar}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.filters, rtl && styles.rowRtl]}>
           <Chip label={t("all")} active={active === "all"} onPress={() => setActive("all")} />
           {TOPICS.filter((topic) => topicCounts[topic.id] > 0).map((topic) => (
@@ -172,46 +167,52 @@ export function NewsScreen() {
         </Text>
       ) : null}
 
-      {hero.map((headline, index) => {
-        const copy = translated(headline);
-        return (
-          <StoryTile
-            key={headline.id}
-            headline={headline}
-            cover={index === 0}
-            fetchedAt={payload.fetchedAt}
-            title={copy.title}
-            summary={copy.summary}
-          />
-        );
-      })}
+      {hero ? (
+        <HeroStory
+          headline={hero}
+          fetchedAt={payload.fetchedAt}
+          title={translated(hero).title}
+          summary={translated(hero).summary}
+        />
+      ) : null}
 
-      {sections.map((section) => (
-        <View key={section.topic} style={styles.block}>
-          <Text style={[styles.heading, rtl && styles.rtlText]}>{topicLabel(section.topic, locale)}</Text>
-          {section.items.map((headline) => {
-            const copy = translated(headline);
-            return (
-              <StoryTile
-                key={headline.id}
-                headline={headline}
-                cover={false}
-                fetchedAt={payload.fetchedAt}
-                title={copy.title}
-                summary={copy.summary}
-              />
-            );
-          })}
+      {top.length > 0 ? (
+        <View style={styles.block}>
+          <Text style={[styles.sectionLabel, rtl && styles.rtlText]}>{t("topStories")}</Text>
+          {top.map((headline, index) => (
+            <NumberedRow
+              key={headline.id}
+              index={index + 1}
+              headline={headline}
+              fetchedAt={payload.fetchedAt}
+              title={translated(headline).title}
+            />
+          ))}
         </View>
-      ))}
+      ) : null}
 
-      {leftover.map((headline) => {
+      {active === "all" && popular.length > 0 ? (
+        <View style={styles.popularCard}>
+          <Text style={[styles.cardKicker, rtl && styles.rtlText]}>{t("mostPopular")}</Text>
+          {popular.map((headline, index) => (
+            <NumberedRow
+              key={headline.id}
+              index={index + 1}
+              headline={headline}
+              fetchedAt={payload.fetchedAt}
+              title={translated(headline).title}
+              onColor
+            />
+          ))}
+        </View>
+      ) : null}
+
+      {rest.map((headline) => {
         const copy = translated(headline);
         return (
-          <StoryTile
+          <StreamCard
             key={headline.id}
             headline={headline}
-            cover={false}
             fetchedAt={payload.fetchedAt}
             title={copy.title}
             summary={copy.summary}
@@ -233,15 +234,38 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
   );
 }
 
-function StoryTile({
+function Meta({
   headline,
-  cover,
+  fetchedAt,
+  onColor,
+}: {
+  headline: Headline;
+  fetchedAt: string;
+  onColor?: boolean;
+}) {
+  const { locale, rtl } = useLocale();
+  const source = SOURCES.find((item) => item.id === headline.sourceId);
+  if (!source) return null;
+  return (
+    <View style={[styles.meta, rtl && styles.rowRtl]}>
+      <Text style={[styles.byline, onColor && styles.onColorMeta]}>{sourceName(source, locale)}</Text>
+      <Text style={[styles.topic, onColor && styles.onColorMuted]}>{topicLabel(headline.topic, locale)}</Text>
+      {headline.publishedAt ? (
+        <Text style={[styles.time, onColor && styles.onColorMuted]}>
+          {formatRelative(headline.publishedAt, locale, Date.parse(fetchedAt))}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+function HeroStory({
+  headline,
   fetchedAt,
   title,
   summary,
 }: {
   headline: Headline;
-  cover: boolean;
   fetchedAt: string;
   title: string;
   summary?: string;
@@ -249,6 +273,58 @@ function StoryTile({
   const { locale, rtl, t } = useLocale();
   const source = SOURCES.find((item) => item.id === headline.sourceId);
   const [photo, setPhoto] = useState(Boolean(headline.imageUrl));
+  const align = isHebrew(title) || rtl ? "right" : "left";
+
+  useEffect(() => {
+    setPhoto(Boolean(headline.imageUrl));
+  }, [headline.imageUrl]);
+
+  if (!source) return null;
+  const publisher = sourceName(source, locale);
+
+  return (
+    <Pressable style={styles.hero} onPress={() => void openUrl(headline.url)}>
+      {photo && headline.imageUrl ? (
+        <Image source={{ uri: headline.imageUrl }} style={styles.heroPhoto} onError={() => setPhoto(false)} />
+      ) : (
+        <View style={[styles.heroPhoto, styles.heroFallback]} />
+      )}
+      <LinearGradient colors={["transparent", "rgba(0,0,0,0.88)"]} style={styles.heroShade} />
+      <View style={styles.heroCopy}>
+        <Meta headline={headline} fetchedAt={fetchedAt} onColor />
+        <Text style={[styles.heroTitle, { fontFamily: displayFamily(title), textAlign: align }]} numberOfLines={4}>
+          {title}
+        </Text>
+        {summary ? (
+          <Text style={[styles.heroDek, { textAlign: align }]} numberOfLines={2}>
+            {summary}
+          </Text>
+        ) : null}
+        <Text style={styles.heroLink}>
+          {t("readOn")} {publisher}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
+function NumberedRow({
+  index,
+  headline,
+  fetchedAt,
+  title,
+  onColor,
+}: {
+  index: number;
+  headline: Headline;
+  fetchedAt: string;
+  title: string;
+  onColor?: boolean;
+}) {
+  const { locale, rtl, t } = useLocale();
+  const source = SOURCES.find((item) => item.id === headline.sourceId);
+  const [photo, setPhoto] = useState(Boolean(headline.imageUrl));
+  const align = isHebrew(title) || rtl ? "right" : "left";
 
   useEffect(() => {
     setPhoto(Boolean(headline.imageUrl));
@@ -256,60 +332,93 @@ function StoryTile({
 
   if (!source) return null;
 
-  const publisher = sourceName(source, locale);
-  const titleAlign = isHebrew(title) || rtl ? "right" : "left";
+  return (
+    <Pressable
+      onPress={() => void openUrl(headline.url)}
+      style={[styles.row, rtl && styles.rowRtl, onColor && styles.rowOnColor]}
+    >
+      <Text style={styles.rank}>{String(index).padStart(2, "0")}</Text>
+      <View style={styles.rowCopy}>
+        <Text style={[styles.rowTitle, { fontFamily: sansFamily(title, "bold"), textAlign: align }]} numberOfLines={3}>
+          {title}
+        </Text>
+        <Meta headline={headline} fetchedAt={fetchedAt} onColor={onColor} />
+        <Text style={[styles.rowLink, onColor && styles.onColorMuted]}>
+          {t("readOn")} {sourceName(source, locale)}
+        </Text>
+      </View>
+      {photo && headline.imageUrl ? (
+        <Image source={{ uri: headline.imageUrl }} style={styles.thumb} onError={() => setPhoto(false)} />
+      ) : (
+        <View style={styles.thumb} />
+      )}
+    </Pressable>
+  );
+}
+
+function StreamCard({
+  headline,
+  fetchedAt,
+  title,
+  summary,
+}: {
+  headline: Headline;
+  fetchedAt: string;
+  title: string;
+  summary?: string;
+}) {
+  const { locale, rtl, t } = useLocale();
+  const source = SOURCES.find((item) => item.id === headline.sourceId);
+  const [photo, setPhoto] = useState(Boolean(headline.imageUrl));
+  const align = isHebrew(title) || rtl ? "right" : "left";
+
+  useEffect(() => {
+    setPhoto(Boolean(headline.imageUrl));
+  }, [headline.imageUrl]);
+
+  if (!source) return null;
 
   return (
-    <View style={styles.tile}>
-      {photo && headline.imageUrl ? (
-        <Image
-          source={{ uri: headline.imageUrl }}
-          style={[styles.photo, cover && styles.coverPhoto]}
-          onError={() => setPhoto(false)}
-        />
-      ) : null}
-      <View style={styles.copy}>
-        <View style={[styles.meta, rtl && styles.rowRtl]}>
-          <Text style={styles.source}>{publisher}</Text>
-          <Text style={styles.topic}>{topicLabel(headline.topic, locale)}</Text>
-          {headline.publishedAt ? (
-            <Text style={styles.time}>{formatRelative(headline.publishedAt, locale, Date.parse(fetchedAt))}</Text>
-          ) : null}
-        </View>
-        <Text style={[styles.title, cover && styles.coverTitle, { textAlign: titleAlign }]}>{title}</Text>
-        {summary ? <Text style={[styles.dek, { textAlign: titleAlign }]}>{summary}</Text> : null}
-        <Pressable onPress={() => void openUrl(headline.url)}>
-          <Text style={[styles.outbound, rtl && styles.rtlText]}>
-            {t("readOn")} {publisher}
+    <Pressable onPress={() => void openUrl(headline.url)} style={[styles.stream, rtl && styles.rowRtl]}>
+      <View style={styles.streamCopy}>
+        <Meta headline={headline} fetchedAt={fetchedAt} />
+        <Text style={[styles.streamTitle, { fontFamily: sansFamily(title, "bold"), textAlign: align }]}>{title}</Text>
+        {summary ? (
+          <Text style={[styles.streamDek, { textAlign: align }]} numberOfLines={3}>
+            {summary}
           </Text>
-        </Pressable>
+        ) : null}
+        <Text style={styles.rowLink}>
+          {t("readOn")} {sourceName(source, locale)}
+        </Text>
       </View>
-    </View>
+      {photo && headline.imageUrl ? (
+        <Image source={{ uri: headline.imageUrl }} style={styles.streamThumb} onError={() => setPhoto(false)} />
+      ) : null}
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: color.board,
+    backgroundColor: color.charcoal,
   },
   content: {
-    paddingBottom: 24,
+    paddingBottom: 32,
+    gap: 8,
   },
   loading: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: color.board,
+    backgroundColor: color.charcoal,
   },
   toolbar: {
     paddingHorizontal: 16,
     paddingTop: 10,
-    paddingBottom: 16,
-    gap: 10,
-  },
-  toolbarRtl: {
-    alignItems: "stretch",
+    paddingBottom: 8,
+    gap: 12,
   },
   filters: {
     flexDirection: "row",
@@ -324,23 +433,24 @@ const styles = StyleSheet.create({
   },
   chip: {
     borderWidth: 1,
-    borderColor: color.line,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: "#fff",
+    borderColor: color.mist,
+    borderRadius: radius.button,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    backgroundColor: color.charcoal,
   },
   chipOn: {
-    backgroundColor: color.ink,
-    borderColor: color.ink,
+    backgroundColor: color.mint,
+    borderColor: color.mint,
   },
   chipText: {
-    color: color.inkSoft,
-    fontFamily: font.sans,
-    fontSize: 14,
+    color: color.paper,
+    fontFamily: font.monoBold,
+    fontSize: 12,
+    letterSpacing: 1.2,
   },
   chipOnText: {
-    color: "#fff",
+    color: color.onyx,
   },
   actions: {
     flexDirection: "row",
@@ -348,104 +458,201 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   refresh: {
-    color: color.mute,
-    fontFamily: font.sans,
-    fontSize: 14,
+    color: color.mint,
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
   },
   note: {
-    color: color.mute,
-    fontFamily: font.sans,
-    fontSize: 13,
+    color: color.fog,
+    fontFamily: font.mono,
+    fontSize: 11,
+    letterSpacing: 1.1,
   },
   pad: {
     paddingHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   block: {
-    gap: 12,
-    marginTop: 12,
-  },
-  heading: {
-    marginHorizontal: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: color.line,
-    fontFamily: font.sansBold,
-    fontSize: 13,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    color: color.ink,
-  },
-  tile: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: color.line,
-    borderRadius: 4,
-    overflow: "hidden",
-    backgroundColor: "#fff",
-  },
-  photo: {
-    width: "100%",
-    aspectRatio: 16 / 10,
-    backgroundColor: color.photoBg,
-  },
-  coverPhoto: {
-    aspectRatio: 16 / 10,
-  },
-  copy: {
     paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 16,
+    paddingTop: 20,
+    gap: 0,
+  },
+  sectionLabel: {
+    color: color.mint,
+    fontFamily: font.sansMedium,
+    fontSize: 20,
+    letterSpacing: 0.4,
+    marginBottom: 12,
+  },
+  popularCard: {
+    marginHorizontal: 16,
+    marginTop: 28,
+    backgroundColor: color.ultraviolet,
+    borderRadius: radius.card,
+    padding: 20,
+  },
+  cardKicker: {
+    color: color.paper,
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
+    marginBottom: 12,
+  },
+  hero: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: radius.card,
+    overflow: "hidden",
+    backgroundColor: color.iron,
+    minHeight: 320,
+    justifyContent: "flex-end",
+  },
+  heroPhoto: {
+    ...StyleSheet.absoluteFill,
+    width: "100%",
+    height: "100%",
+  },
+  heroFallback: {
+    backgroundColor: color.iron,
+  },
+  heroShade: {
+    ...StyleSheet.absoluteFill,
+  },
+  heroCopy: {
+    padding: 20,
+    gap: 8,
+  },
+  heroTitle: {
+    color: color.paper,
+    fontSize: 40,
+    lineHeight: 44,
+    letterSpacing: 0.4,
+    paddingTop: 4,
+  },
+  heroDek: {
+    color: color.fog,
+    fontFamily: font.serif,
+    fontSize: 16,
+    lineHeight: 21,
+    letterSpacing: -0.16,
+  },
+  heroLink: {
+    color: color.mint,
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
+    marginTop: 4,
   },
   meta: {
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "center",
-    gap: 10,
-    marginBottom: 8,
+    gap: 8,
   },
-  source: {
-    color: color.red,
-    fontFamily: font.sansBold,
+  byline: {
+    color: color.mint,
+    fontFamily: font.sansMedium,
     fontSize: 11,
-    letterSpacing: 0.4,
+    letterSpacing: 1.1,
     textTransform: "uppercase",
   },
   topic: {
-    color: color.inkSoft,
-    fontFamily: font.sansBold,
+    color: color.fog,
+    fontFamily: font.mono,
     fontSize: 11,
-    letterSpacing: 0.4,
+    letterSpacing: 1.1,
     textTransform: "uppercase",
   },
   time: {
-    color: color.mute,
-    fontFamily: font.sans,
-    fontSize: 12,
+    color: color.fog,
+    fontFamily: font.mono,
+    fontSize: 11,
+    letterSpacing: 1.1,
   },
-  title: {
-    color: color.ink,
-    fontFamily: font.sansBlack,
+  onColorMeta: {
+    color: color.mint,
+  },
+  onColorMuted: {
+    color: "rgba(255,255,255,0.72)",
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: color.iron,
+  },
+  rowOnColor: {
+    borderTopColor: "rgba(255,255,255,0.18)",
+  },
+  rank: {
+    color: color.mint,
+    fontFamily: font.sansBold,
+    fontSize: 16,
+    width: 28,
+    paddingTop: 2,
+  },
+  rowCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 6,
+  },
+  rowTitle: {
+    color: color.paper,
+    fontSize: 18,
+    lineHeight: 23,
+    letterSpacing: 0.36,
+  },
+  rowLink: {
+    color: color.fog,
+    fontFamily: font.mono,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
+  },
+  thumb: {
+    width: 60,
+    height: 60,
+    borderRadius: radius.image,
+    backgroundColor: color.iron,
+  },
+  stream: {
+    marginHorizontal: 16,
+    marginTop: 20,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 14,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: color.iron,
+  },
+  streamCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 8,
+  },
+  streamTitle: {
+    color: color.paper,
     fontSize: 20,
     lineHeight: 26,
+    letterSpacing: 0.4,
   },
-  coverTitle: {
-    fontSize: 28,
-    lineHeight: 34,
+  streamDek: {
+    color: color.fog,
+    fontFamily: font.serif,
+    fontSize: 16,
+    lineHeight: 21,
+    letterSpacing: -0.16,
   },
-  dek: {
-    marginTop: 10,
-    color: color.inkSoft,
-    fontFamily: font.sans,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  outbound: {
-    marginTop: 12,
-    color: color.inkSoft,
-    fontFamily: font.sans,
-    fontSize: 13,
-    textDecorationLine: "underline",
+  streamThumb: {
+    width: 92,
+    height: 92,
+    borderRadius: radius.image,
+    backgroundColor: color.iron,
   },
 });

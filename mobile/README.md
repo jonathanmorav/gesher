@@ -12,7 +12,13 @@ npm install
 npx expo start
 ```
 
-Scan the QR code with Expo Go, or press `w` for a web preview of the layout.
+Scan the QR code with Expo Go, or press `w` for a clickable iPhone-framed web preview:
+
+```bash
+npx expo start --web --port 8081
+```
+
+Open `http://localhost:8081` (or the Cursor port preview for 8081). On a desktop-width viewport the app sits inside an iPhone 16 chrome so you can tap headlines, language, podcasts, and radio. Narrow viewports go full-bleed; append `?frame=0` to force that.
 
 ## Ship to the App Store
 

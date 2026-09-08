@@ -25,7 +25,7 @@ import {
 import { useAudioHub } from "./audio";
 import { useLocale } from "./locale";
 import { openUrl } from "./open";
-import { color, font } from "./theme";
+import { color, displayFamily, font, radius, sansFamily } from "./theme";
 import { Colophon } from "./Colophon";
 
 export function PodcastsScreen() {
@@ -84,7 +84,7 @@ export function PodcastsScreen() {
   if (!payload) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color={color.red} />
+        <ActivityIndicator color={color.mint} />
       </View>
     );
   }
@@ -95,7 +95,10 @@ export function PodcastsScreen() {
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
       <View style={styles.pageHead}>
-        <Text style={[styles.h1, rtl && styles.rtlText]}>{t("navPodcasts")}</Text>
+        <Text style={[styles.kicker, rtl && styles.rtlText]}>{t("navPodcasts")}</Text>
+        <Text style={[styles.h1, rtl && styles.rtlText, { fontFamily: displayFamily(t("navPodcasts")) }]}>
+          {t("navPodcasts")}
+        </Text>
         <Text style={[styles.lead, rtl && styles.rtlText]}>{t("podcastsLead")}</Text>
       </View>
 
@@ -103,18 +106,25 @@ export function PodcastsScreen() {
         <View style={[styles.now, rtl && styles.rowRtl]}>
           {current.imageUrl ? <Image source={{ uri: current.imageUrl }} style={styles.art} /> : <View style={styles.art} />}
           <View style={styles.nowCopy}>
-            <Text style={[styles.nowTitle, { textAlign: isHebrew(copy(current).title) || rtl ? "right" : "left" }]}>
+            <Text style={styles.nowLabel}>{t("nowPlaying")}</Text>
+            <Text
+              style={[
+                styles.nowTitle,
+                {
+                  fontFamily: sansFamily(copy(current).title, "bold"),
+                  textAlign: isHebrew(copy(current).title) || rtl ? "right" : "left",
+                },
+              ]}
+            >
               {copy(current).title}
             </Text>
-            <Text style={[styles.nowMeta, rtl && styles.rtlText]}>
-              {t("nowPlaying")} · {podcastName(PODCAST_BY_ID[current.showId], locale)}
-            </Text>
+            <Text style={[styles.nowMeta, rtl && styles.rtlText]}>{podcastName(PODCAST_BY_ID[current.showId], locale)}</Text>
           </View>
           <Pressable
             onPress={() => toggleEpisode(current)}
-            style={[styles.playEp, currentEpisode?.id === current.id && podcastPlaying && styles.playGhost]}
+            style={[styles.listen, currentEpisode?.id === current.id && podcastPlaying && styles.listenGhost]}
           >
-            <Text style={[styles.playEpText, currentEpisode?.id === current.id && podcastPlaying && styles.playGhostText]}>
+            <Text style={[styles.listenText, currentEpisode?.id === current.id && podcastPlaying && styles.listenGhostText]}>
               {currentEpisode?.id === current.id && podcastPlaying ? t("pause") : t("listen")}
             </Text>
           </Pressable>
@@ -135,38 +145,34 @@ export function PodcastsScreen() {
         </Text>
       ) : null}
 
-      {payload.episodes.map((episode) => {
-        const show = PODCAST_BY_ID[episode.showId];
-        const text = copy(episode);
-        const selected = episode.id === currentEpisode?.id;
-        return (
-          <View key={episode.id} style={[styles.tile, selected && podcastPlaying && styles.tilePlaying]}>
-            <Pressable onPress={() => setOpenId(episode.id)}>
-              {episode.imageUrl ? <Image source={{ uri: episode.imageUrl }} style={styles.photo} /> : null}
-              <View style={styles.copy}>
-                <View style={[styles.meta, rtl && styles.rowRtl]}>
-                  <Text style={styles.source}>{podcastName(show, locale)}</Text>
-                  {episode.publishedAt ? (
-                    <Text style={styles.time}>{formatRelative(episode.publishedAt, locale, Date.parse(payload.fetchedAt))}</Text>
-                  ) : null}
-                </View>
-                <Text style={[styles.title, { textAlign: isHebrew(text.title) || rtl ? "right" : "left" }]}>{text.title}</Text>
-                <Text style={[styles.hint, rtl && styles.rtlText]}>{t("lessonsHint")}</Text>
-              </View>
-            </Pressable>
-            <View style={[styles.actions, rtl && styles.rowRtl]}>
-              <Pressable
-                onPress={() => toggleEpisode(episode)}
-                style={[styles.playEp, selected && podcastPlaying && styles.playGhost]}
-              >
-                <Text style={[styles.playEpText, selected && podcastPlaying && styles.playGhostText]}>
-                  {selected && podcastPlaying ? t("pause") : t("listen")}
+      <View style={styles.heatCard}>
+        <Text style={[styles.cardKicker, rtl && styles.rtlText]}>{t("navPodcasts")}</Text>
+        {payload.episodes.map((episode, index) => {
+          const show = PODCAST_BY_ID[episode.showId];
+          const text = copy(episode);
+          const selected = episode.id === currentEpisode?.id;
+          const align = isHebrew(text.title) || rtl ? "right" : "left";
+          return (
+            <View key={episode.id} style={[styles.row, rtl && styles.rowRtl, selected && podcastPlaying && styles.rowLive]}>
+              <Text style={styles.rank}>{String(index + 1).padStart(2, "0")}</Text>
+              <Pressable style={styles.rowCopy} onPress={() => setOpenId(episode.id)}>
+                <Text
+                  style={[styles.rowTitle, { fontFamily: sansFamily(text.title, "bold"), textAlign: align }]}
+                  numberOfLines={3}
+                >
+                  {text.title}
                 </Text>
+                <Text style={styles.byline}>{podcastName(show, locale)}</Text>
+                {episode.publishedAt ? (
+                  <Text style={styles.time}>{formatRelative(episode.publishedAt, locale, Date.parse(payload.fetchedAt))}</Text>
+                ) : null}
+                <Text style={styles.hint}>{t("lessonsHint")}</Text>
               </Pressable>
+              {episode.imageUrl ? <Image source={{ uri: episode.imageUrl }} style={styles.thumb} /> : <View style={styles.thumb} />}
             </View>
-          </View>
-        );
-      })}
+          );
+        })}
+      </View>
 
       {payload.episodes.length === 0 ? (
         <Text style={[styles.note, styles.pad, rtl && styles.rtlText]}>{t("podcastEmpty")}</Text>
@@ -179,15 +185,23 @@ export function PodcastsScreen() {
           {opened ? (
             <Pressable style={styles.inset} onPress={(event) => event.stopPropagation()}>
               <View style={[styles.insetHead, rtl && styles.rowRtl]}>
-                <Text style={styles.source}>{podcastName(PODCAST_BY_ID[opened.showId], locale)}</Text>
+                <Text style={styles.byline}>{podcastName(PODCAST_BY_ID[opened.showId], locale)}</Text>
                 <Pressable onPress={() => setOpenId(null)}>
                   <Text style={styles.close}>{t("close")}</Text>
                 </Pressable>
               </View>
-              <Text style={[styles.insetTitle, { textAlign: isHebrew(copy(opened).title) || rtl ? "right" : "left" }]}>
+              <Text
+                style={[
+                  styles.insetTitle,
+                  {
+                    fontFamily: displayFamily(copy(opened).title),
+                    textAlign: isHebrew(copy(opened).title) || rtl ? "right" : "left",
+                  },
+                ]}
+              >
                 {copy(opened).title}
               </Text>
-              <Text style={[styles.kicker, rtl && styles.rtlText]}>{t("lessons")}</Text>
+              <Text style={[styles.lessonKicker, rtl && styles.rtlText]}>{t("lessons")}</Text>
               {copy(opened).lessons.length > 0 ? (
                 copy(opened).lessons.map((lesson) => (
                   <Text key={lesson} style={[styles.lesson, { textAlign: isHebrew(lesson) || rtl ? "right" : "left" }]}>
@@ -197,15 +211,15 @@ export function PodcastsScreen() {
               ) : (
                 <Text style={[styles.lesson, rtl && styles.rtlText]}>{t("lessonsEmpty")}</Text>
               )}
-              <View style={[styles.actions, rtl && styles.rowRtl]}>
+              <View style={[styles.insetActions, rtl && styles.rowRtl]}>
                 <Pressable
                   onPress={() => toggleEpisode(opened)}
-                  style={[styles.playEp, currentEpisode?.id === opened.id && podcastPlaying && styles.playGhost]}
+                  style={[styles.listen, currentEpisode?.id === opened.id && podcastPlaying && styles.listenGhost]}
                 >
                   <Text
                     style={[
-                      styles.playEpText,
-                      currentEpisode?.id === opened.id && podcastPlaying && styles.playGhostText,
+                      styles.listenText,
+                      currentEpisode?.id === opened.id && podcastPlaying && styles.listenGhostText,
                     ]}
                   >
                     {currentEpisode?.id === opened.id && podcastPlaying ? t("pause") : t("listen")}
@@ -228,33 +242,41 @@ export function PodcastsScreen() {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: color.board,
+    backgroundColor: color.charcoal,
   },
   content: {
-    paddingBottom: 24,
+    paddingBottom: 32,
   },
   loading: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: color.board,
+    backgroundColor: color.charcoal,
   },
   pageHead: {
     paddingHorizontal: 16,
     paddingTop: 18,
-    paddingBottom: 8,
+    paddingBottom: 12,
+    gap: 8,
+  },
+  kicker: {
+    color: color.mint,
+    fontFamily: font.sansMedium,
+    fontSize: 20,
+    letterSpacing: 0.4,
   },
   h1: {
-    fontFamily: font.sansBlack,
-    fontSize: 28,
-    color: color.ink,
+    color: color.paper,
+    fontSize: 56,
+    lineHeight: 48,
+    letterSpacing: 0.56,
   },
   lead: {
-    marginTop: 8,
-    color: color.inkSoft,
-    fontFamily: font.sans,
-    fontSize: 15,
-    lineHeight: 22,
+    color: color.fog,
+    fontFamily: font.serif,
+    fontSize: 16,
+    lineHeight: 21,
+    letterSpacing: -0.16,
   },
   rtlText: {
     textAlign: "right",
@@ -264,136 +286,154 @@ const styles = StyleSheet.create({
   },
   now: {
     marginHorizontal: 16,
-    marginBottom: 18,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: color.line,
-    borderRadius: 4,
+    marginBottom: 20,
+    padding: 20,
+    borderRadius: radius.card,
+    backgroundColor: color.graphite,
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
   },
   art: {
-    width: 56,
-    height: 56,
-    backgroundColor: color.photoBg,
+    width: 60,
+    height: 60,
+    borderRadius: radius.image,
+    backgroundColor: color.iron,
   },
   nowCopy: {
     flex: 1,
     minWidth: 0,
+    gap: 4,
+  },
+  nowLabel: {
+    color: color.mint,
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
   },
   nowTitle: {
-    fontFamily: font.sansBold,
+    color: color.paper,
     fontSize: 16,
-    color: color.ink,
+    letterSpacing: 0.32,
   },
   nowMeta: {
-    marginTop: 4,
-    color: color.mute,
-    fontFamily: font.sans,
-    fontSize: 12,
+    color: color.fog,
+    fontFamily: font.sansMedium,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
   },
   note: {
-    color: color.mute,
-    fontFamily: font.sans,
-    fontSize: 13,
+    color: color.fog,
+    fontFamily: font.mono,
+    fontSize: 11,
+    letterSpacing: 1.1,
   },
   pad: {
     paddingHorizontal: 16,
     marginBottom: 12,
   },
-  tile: {
+  heatCard: {
     marginHorizontal: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: color.line,
-    borderRadius: 4,
-    overflow: "hidden",
-    backgroundColor: "#fff",
+    backgroundColor: color.heat,
+    borderRadius: radius.card,
+    padding: 20,
   },
-  tilePlaying: {
-    borderColor: color.red,
-  },
-  photo: {
-    width: "100%",
-    aspectRatio: 16 / 10,
-    backgroundColor: color.photoBg,
-  },
-  copy: {
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 8,
-  },
-  meta: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
+  cardKicker: {
+    color: color.paper,
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
     marginBottom: 8,
   },
-  source: {
-    color: color.red,
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.18)",
+  },
+  rowLive: {
+    borderTopColor: color.mint,
+  },
+  rank: {
+    color: color.mint,
     fontFamily: font.sansBold,
+    fontSize: 16,
+    width: 28,
+    paddingTop: 2,
+  },
+  rowCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
+  },
+  rowTitle: {
+    color: color.paper,
+    fontSize: 18,
+    lineHeight: 23,
+    letterSpacing: 0.36,
+  },
+  byline: {
+    color: color.mint,
+    fontFamily: font.sansMedium,
     fontSize: 11,
-    letterSpacing: 0.4,
+    letterSpacing: 1.1,
     textTransform: "uppercase",
   },
   time: {
-    color: color.mute,
-    fontFamily: font.sans,
-    fontSize: 12,
-  },
-  title: {
-    color: color.ink,
-    fontFamily: font.sansBlack,
-    fontSize: 20,
-    lineHeight: 26,
+    color: "rgba(255,255,255,0.72)",
+    fontFamily: font.mono,
+    fontSize: 11,
+    letterSpacing: 1.1,
   },
   hint: {
-    marginTop: 10,
-    color: color.mute,
-    fontFamily: font.sans,
-    fontSize: 13,
+    color: color.paper,
+    fontFamily: font.mono,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
     textDecorationLine: "underline",
   },
-  actions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    gap: 14,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+  thumb: {
+    width: 60,
+    height: 60,
+    borderRadius: radius.image,
+    backgroundColor: "rgba(0,0,0,0.2)",
   },
-  playEp: {
-    backgroundColor: color.ink,
-    borderWidth: 1,
-    borderColor: color.ink,
-    borderRadius: 999,
+  listen: {
+    backgroundColor: color.mint,
+    borderRadius: radius.input,
     paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingVertical: 8,
+    alignSelf: "center",
   },
-  playGhost: {
-    backgroundColor: "#fff",
+  listenGhost: {
+    backgroundColor: color.onyx,
   },
-  playEpText: {
-    color: "#fff",
-    fontFamily: font.sans,
-    fontSize: 13,
+  listenText: {
+    color: color.onyx,
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
   },
-  playGhostText: {
-    color: color.ink,
+  listenGhostText: {
+    color: color.mint,
   },
   layer: {
     flex: 1,
-    backgroundColor: "rgba(255,255,255,0.72)",
+    backgroundColor: "rgba(0,0,0,0.72)",
     justifyContent: "center",
     paddingHorizontal: 12,
     paddingVertical: 80,
   },
   inset: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: color.line,
-    borderRadius: 4,
+    backgroundColor: color.graphite,
+    borderRadius: radius.card,
     padding: 22,
     maxHeight: "100%",
   },
@@ -404,37 +444,47 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   close: {
-    color: color.inkSoft,
-    fontFamily: font.sans,
-    fontSize: 13,
-    textDecorationLine: "underline",
-  },
-  insetTitle: {
-    fontFamily: font.sansBlack,
-    fontSize: 24,
-    color: color.ink,
-    lineHeight: 30,
-  },
-  kicker: {
-    marginTop: 18,
-    marginBottom: 8,
-    color: color.red,
-    fontFamily: font.sansBold,
-    fontSize: 12,
-    letterSpacing: 1,
+    color: color.mint,
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.1,
     textTransform: "uppercase",
   },
+  insetTitle: {
+    color: color.paper,
+    fontSize: 34,
+    lineHeight: 32,
+    letterSpacing: 0.34,
+  },
+  lessonKicker: {
+    marginTop: 18,
+    marginBottom: 8,
+    color: color.mint,
+    fontFamily: font.sansMedium,
+    fontSize: 20,
+    letterSpacing: 0.4,
+  },
   lesson: {
-    color: color.inkSoft,
-    fontFamily: font.sans,
+    color: color.fog,
+    fontFamily: font.serif,
     fontSize: 16,
-    lineHeight: 24,
+    lineHeight: 21,
+    letterSpacing: -0.16,
     marginBottom: 12,
   },
+  insetActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 14,
+    marginTop: 8,
+  },
   outbound: {
-    color: color.inkSoft,
-    fontFamily: font.sans,
-    fontSize: 13,
+    color: color.paper,
+    fontFamily: font.mono,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
     textDecorationLine: "underline",
   },
 });

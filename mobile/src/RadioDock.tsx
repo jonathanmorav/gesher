@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { STATIONS, stationName } from "./gesher";
 import { useAudioHub } from "./audio";
 import { useLocale } from "./locale";
-import { color, font } from "./theme";
+import { color, font, radius } from "./theme";
 
 export function RadioDock() {
   const { locale, rtl, t } = useLocale();
@@ -17,7 +17,7 @@ export function RadioDock() {
       <View style={[styles.inner, rtl && styles.innerRtl]}>
         <Pressable
           onPress={toggleRadio}
-          style={[styles.play, radioPlaying && styles.playLive]}
+          style={styles.play}
           accessibilityLabel={radioPlaying ? t("pause") : t("play")}
         >
           {radioLoading ? (
@@ -78,9 +78,9 @@ export function RadioDock() {
 
 const styles = StyleSheet.create({
   dock: {
-    backgroundColor: color.radio,
-    borderTopWidth: 2,
-    borderTopColor: color.red,
+    backgroundColor: color.onyx,
+    borderTopWidth: 1,
+    borderTopColor: color.mint,
   },
   inner: {
     minHeight: 76,
@@ -100,20 +100,14 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: color.red,
+    backgroundColor: color.mint,
     alignItems: "center",
     justifyContent: "center",
   },
-  playLive: {
-    shadowColor: color.red,
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 0 },
-  },
   playGlyph: {
-    color: "#fff",
+    color: color.onyx,
     fontSize: 18,
-    fontFamily: font.sans,
+    fontFamily: font.sansBold,
   },
   pause: {
     flexDirection: "row",
@@ -122,7 +116,7 @@ const styles = StyleSheet.create({
   pauseBar: {
     width: 5,
     height: 14,
-    backgroundColor: "#fff",
+    backgroundColor: color.onyx,
   },
   triangle: {
     width: 0,
@@ -133,14 +127,14 @@ const styles = StyleSheet.create({
     borderLeftWidth: 14,
     borderTopColor: "transparent",
     borderBottomColor: "transparent",
-    borderLeftColor: "#fff",
+    borderLeftColor: color.onyx,
   },
   triangleRtl: {
     marginLeft: 0,
     marginRight: 3,
     borderLeftWidth: 0,
     borderRightWidth: 14,
-    borderRightColor: "#fff",
+    borderRightColor: color.onyx,
   },
   copy: {
     flex: 1,
@@ -154,25 +148,27 @@ const styles = StyleSheet.create({
   },
   chip: {
     borderWidth: 1,
-    borderColor: "#2a2a2a",
-    borderRadius: 999,
+    borderColor: color.mist,
+    borderRadius: radius.button,
     paddingHorizontal: 10,
     paddingVertical: 4,
+    backgroundColor: color.charcoal,
   },
   chipOn: {
-    backgroundColor: "#1d1d1d",
-    borderColor: color.red,
+    backgroundColor: color.mint,
+    borderColor: color.mint,
   },
   chipText: {
-    color: color.radioMute,
-    fontFamily: font.sans,
-    fontSize: 12,
+    color: color.paper,
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.1,
   },
   chipOnText: {
-    color: "#fff",
+    color: color.onyx,
   },
   sep: {
-    color: "#3a3a3a",
+    color: color.iron,
     paddingHorizontal: 2,
     fontSize: 12,
   },
@@ -183,27 +179,32 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   live: {
-    color: color.radioMute,
-    fontFamily: font.sans,
-    fontSize: 12,
+    color: color.fog,
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
   },
   liveOn: {
-    color: color.red,
+    color: color.mint,
   },
   station: {
-    color: "#fff",
-    fontFamily: font.sansBlack,
-    fontSize: 20,
+    color: color.paper,
+    fontFamily: font.sansBold,
+    fontSize: 18,
+    letterSpacing: 0.36,
   },
   freq: {
-    color: color.red,
-    fontFamily: font.mono,
-    fontSize: 13,
+    color: color.mint,
+    fontFamily: font.monoMed,
+    fontSize: 12,
+    letterSpacing: 1.5,
   },
   meta: {
     marginTop: 6,
-    color: color.radioMute,
-    fontFamily: font.sans,
+    color: color.fog,
+    fontFamily: font.serif,
     fontSize: 13,
+    letterSpacing: -0.13,
   },
 });
