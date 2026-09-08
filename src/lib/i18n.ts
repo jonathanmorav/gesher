@@ -61,6 +61,12 @@ export const UI = {
   playError: { he: "לא ניתן להפעיל את השידור", en: "Couldn’t start the stream" },
   streamDown: { he: "השידור לא זמין כרגע", en: "The stream is unavailable right now" },
   language: { he: "שפה", en: "Language" },
+  privacy: { he: "פרטיות", en: "Privacy" },
+  support: { he: "תמיכה", en: "Support" },
+  privacyLead: {
+    he: "גשר לא דורש חשבון ולא אוסף מזהים. ההעדפות נשמרות במכשיר.",
+    en: "Gesher does not require an account and does not collect identifiers. Preferences stay on your device.",
+  },
 } as const;
 
 export type UiKey = keyof typeof UI;
@@ -70,6 +76,7 @@ export function t(key: UiKey, locale: Locale): string {
 }
 
 export function applyDocumentLocale(locale: Locale) {
+  if (typeof document === "undefined") return;
   document.documentElement.lang = locale;
   document.documentElement.dir = locale === "he" ? "rtl" : "ltr";
 }

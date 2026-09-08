@@ -14,6 +14,11 @@ export function SiteFooter({ kind = "news" }: { kind?: FooterKind }) {
       <footer className="colophon">
         <p>{t("podcastsColophon")}</p>
         <p className="sources-line">
+          <a href="/privacy">{t("privacy")}</a>
+          {" · "}
+          <a href="/support">{t("support")}</a>
+        </p>
+        <p className="sources-line">
           {t("shows")}:{" "}
           {PODCASTS.map((show, index) => (
             <span key={show.id}>
@@ -31,6 +36,11 @@ export function SiteFooter({ kind = "news" }: { kind?: FooterKind }) {
   return (
     <footer className="colophon">
       <p>{t("colophon")}</p>
+      <p className="sources-line">
+        <a href="/privacy">{t("privacy")}</a>
+        {" · "}
+        <a href="/support">{t("support")}</a>
+      </p>
       <p className="sources-line">
         {t("sources")}:{" "}
         {SOURCES.map((source, index) => (

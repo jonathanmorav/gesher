@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import { isWeakImage, upgradeImageUrl } from "./images";
 import { extractLessons } from "./lessons";
 import { PODCASTS, type PodcastId, type PodcastShow } from "./podcasts";
@@ -112,7 +111,7 @@ async function fetchShow(show: PodcastShow): Promise<Episode> {
   return episode;
 }
 
-async function fetchAllEpisodes(): Promise<EpisodesPayload> {
+export async function fetchAllEpisodes(): Promise<EpisodesPayload> {
   const results = await Promise.allSettled(PODCASTS.map((show) => fetchShow(show)));
   const episodes: Episode[] = [];
   const errors: EpisodeError[] = [];
@@ -141,7 +140,3 @@ async function fetchAllEpisodes(): Promise<EpisodesPayload> {
     errors,
   };
 }
-
-export const getEpisodes = unstable_cache(fetchAllEpisodes, ["klali-episodes-v7"], {
-  revalidate: 900,
-});

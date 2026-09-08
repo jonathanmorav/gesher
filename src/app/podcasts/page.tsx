@@ -1,6 +1,6 @@
 import { PodcastBoard } from "@/components/PodcastBoard";
 import { SiteShell } from "@/components/SiteShell";
-import { getEpisodes } from "@/lib/episodes";
+import { getEpisodes } from "@/lib/episodes.server";
 
 export const revalidate = 900;
 
