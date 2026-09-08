@@ -1,6 +1,6 @@
 import { NewsRiver } from "@/components/NewsRiver";
 import { SiteShell } from "@/components/SiteShell";
-import { getHeadlines } from "@/lib/headlines";
+import { getHeadlines } from "@/lib/headlines.server";
 
 export const revalidate = 180;
 

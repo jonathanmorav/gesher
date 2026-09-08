@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import {
   HEADLINES_PER_SOURCE,
   SOURCES,
@@ -282,7 +281,7 @@ async function fetchSource(source: NewsSource): Promise<Headline[]> {
   return parseRssItems(body, source, source.id === "ynetent" ? { hint: "celebs" } : {});
 }
 
-async function fetchAllHeadlines(): Promise<HeadlinesPayload> {
+export async function fetchAllHeadlines(): Promise<HeadlinesPayload> {
   const results = await Promise.allSettled(SOURCES.map((source) => fetchSource(source)));
   let headlines: Headline[] = [];
   const errors: SourceError[] = [];
@@ -316,7 +315,3 @@ async function fetchAllHeadlines(): Promise<HeadlinesPayload> {
     errors,
   };
 }
-
-export const getHeadlines = unstable_cache(fetchAllHeadlines, ["klali-headlines-v13"], {
-  revalidate: 180,
-});

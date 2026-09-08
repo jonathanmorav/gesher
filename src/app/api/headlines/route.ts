@@ -1,4 +1,4 @@
-import { getHeadlines } from "@/lib/headlines";
+import { getHeadlines } from "@/lib/headlines.server";
 
 export const revalidate = 180;
 
