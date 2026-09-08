@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useState } from "react";
 import { formatIsraelClock } from "./gesher";
 import { useLocale } from "./locale";
-import { color, font } from "./theme";
+import { color, font, radius } from "./theme";
 
 export type ScreenId = "news" | "podcasts";
 
@@ -21,40 +21,38 @@ export function Masthead({ screen, onScreen }: { screen: ScreenId; onScreen: (sc
 
   return (
     <View style={[styles.wrap, { paddingTop: Math.max(insets.top, 8) }]}>
-      <View style={[styles.inner, rtl && styles.innerRtl]}>
-        <View style={[styles.brand, rtl && styles.rowRtl]}>
-          <View style={styles.mark}>
-            <Text style={styles.markLetter}>ג</Text>
-          </View>
-          <View>
-            <Text style={styles.wordmark}>גשר</Text>
-            <Text style={styles.tag} numberOfLines={1}>
-              {t("tagline")}
-            </Text>
-          </View>
+      <View style={[styles.brandRow, rtl && styles.rowRtl]}>
+        <Text style={styles.spine}>גשר</Text>
+        <View style={styles.brandCopy}>
+          <Text style={[styles.wordmark, rtl && styles.rtlText]}>גשר</Text>
+          <Text style={[styles.tag, rtl && styles.rtlText]} numberOfLines={1}>
+            {t("tagline")}
+          </Text>
         </View>
+        <Text style={styles.clock}>{clock.time}</Text>
+      </View>
 
+      <View style={[styles.tools, rtl && styles.rowRtl]}>
         <View style={[styles.nav, rtl && styles.rowRtl]}>
-          <Pressable onPress={() => onScreen("news")} hitSlop={8}>
-            <Text style={[styles.navLink, screen === "news" && styles.navActive]}>{t("navHeadlines")}</Text>
+          <Pressable onPress={() => onScreen("news")} hitSlop={8} style={[styles.navItem, screen === "news" && styles.navOn]}>
+            <Text style={[styles.navLink, screen === "news" && styles.navLinkOn]}>{t("navHeadlines")}</Text>
           </Pressable>
-          <Pressable onPress={() => onScreen("podcasts")} hitSlop={8}>
-            <Text style={[styles.navLink, screen === "podcasts" && styles.navActive]}>{t("navPodcasts")}</Text>
+          <Pressable
+            onPress={() => onScreen("podcasts")}
+            hitSlop={8}
+            style={[styles.navItem, screen === "podcasts" && styles.navOn]}
+          >
+            <Text style={[styles.navLink, screen === "podcasts" && styles.navLinkOn]}>{t("navPodcasts")}</Text>
           </Pressable>
         </View>
 
-        <View style={[styles.tools, rtl && styles.rowRtl]}>
-          <View style={[styles.lang, rtl && styles.rowRtl]}>
-            <Pressable onPress={() => setLocale("he")} style={[styles.langBtn, locale === "he" && styles.langOn]}>
-              <Text style={[styles.langText, locale === "he" && styles.langOnText]}>עב</Text>
-            </Pressable>
-            <Pressable onPress={() => setLocale("en")} style={[styles.langBtn, locale === "en" && styles.langOn]}>
-              <Text style={[styles.langText, locale === "en" && styles.langOnText]}>EN</Text>
-            </Pressable>
-          </View>
-          <View style={styles.clock}>
-            <Text style={styles.clockTime}>{clock.time}</Text>
-          </View>
+        <View style={[styles.lang, rtl && styles.rowRtl]}>
+          <Pressable onPress={() => setLocale("he")} style={[styles.langBtn, locale === "he" && styles.langOn]}>
+            <Text style={[styles.langText, locale === "he" && styles.langOnText]}>עב</Text>
+          </Pressable>
+          <Pressable onPress={() => setLocale("en")} style={[styles.langBtn, locale === "en" && styles.langOn]}>
+            <Text style={[styles.langText, locale === "en" && styles.langOnText]}>EN</Text>
+          </Pressable>
         </View>
       </View>
     </View>
@@ -63,69 +61,55 @@ export function Masthead({ screen, onScreen }: { screen: ScreenId; onScreen: (sc
 
 const styles = StyleSheet.create({
   wrap: {
-    backgroundColor: color.board,
-    borderBottomWidth: 1,
-    borderBottomColor: color.line,
-  },
-  inner: {
-    minHeight: 64,
+    backgroundColor: color.charcoal,
     paddingHorizontal: 16,
-    paddingBottom: 10,
-    gap: 10,
+    paddingBottom: 14,
+    gap: 14,
   },
-  innerRtl: {
-    alignItems: "stretch",
-  },
-  rowRtl: {
-    flexDirection: "row-reverse",
-  },
-  brand: {
+  brandRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
-  mark: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: color.red,
-    alignItems: "center",
-    justifyContent: "center",
+  rowRtl: {
+    flexDirection: "row-reverse",
   },
-  markLetter: {
-    color: "#fff",
-    fontFamily: font.sansBlack,
-    fontSize: 22,
+  rtlText: {
+    textAlign: "right",
+  },
+  spine: {
+    color: color.paper,
+    fontFamily: font.displayHe,
+    fontSize: 28,
     lineHeight: 28,
+    letterSpacing: 1,
+    width: 28,
+    textAlign: "center",
+  },
+  brandCopy: {
+    flex: 1,
+    minWidth: 0,
   },
   wordmark: {
-    fontFamily: font.sansBlack,
-    fontSize: 22,
-    letterSpacing: -0.4,
-    color: color.ink,
-    lineHeight: 24,
+    fontFamily: font.displayHe,
+    fontSize: 34,
+    lineHeight: 34,
+    letterSpacing: 0.68,
+    color: color.paper,
   },
   tag: {
-    marginTop: 3,
-    color: color.mute,
+    marginTop: 4,
+    color: color.fog,
     fontFamily: font.sans,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
+  },
+  clock: {
+    fontFamily: font.monoMed,
     fontSize: 12,
-    maxWidth: 260,
-  },
-  nav: {
-    flexDirection: "row",
-    gap: 18,
-  },
-  navLink: {
-    color: color.mute,
-    fontFamily: font.sans,
-    fontSize: 14,
-    paddingBottom: 4,
-  },
-  navActive: {
-    color: color.ink,
-    borderBottomWidth: 2,
-    borderBottomColor: color.red,
+    letterSpacing: 1.5,
+    color: color.silver,
   },
   tools: {
     flexDirection: "row",
@@ -133,35 +117,51 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 16,
   },
+  nav: {
+    flexDirection: "row",
+    gap: 18,
+    flex: 1,
+  },
+  navItem: {
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: "transparent",
+  },
+  navOn: {
+    borderTopColor: color.mint,
+  },
+  navLink: {
+    color: color.paper,
+    fontFamily: font.sans,
+    fontSize: 16,
+    letterSpacing: 0.32,
+  },
+  navLinkOn: {
+    color: color.mint,
+  },
   lang: {
     flexDirection: "row",
-    borderWidth: 1,
-    borderColor: color.line,
-    borderRadius: 999,
-    overflow: "hidden",
+    gap: 6,
   },
   langBtn: {
-    paddingHorizontal: 11,
-    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: color.mist,
+    borderRadius: radius.button,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: color.charcoal,
   },
   langOn: {
-    backgroundColor: color.red,
+    backgroundColor: color.mint,
+    borderColor: color.mint,
   },
   langText: {
-    fontFamily: font.sans,
+    fontFamily: font.monoBold,
     fontSize: 12,
-    color: color.inkSoft,
-    letterSpacing: 0.4,
+    letterSpacing: 1.2,
+    color: color.paper,
   },
   langOnText: {
-    color: "#fff",
-  },
-  clock: {
-    alignItems: "flex-end",
-  },
-  clockTime: {
-    fontFamily: font.mono,
-    fontSize: 16,
-    color: color.ink,
+    color: color.onyx,
   },
 });

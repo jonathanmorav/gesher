@@ -56,6 +56,8 @@ export const UI = {
   playError: { he: "לא ניתן להפעיל את השידור", en: "Couldn’t start the stream" },
   streamDown: { he: "השידור לא זמין כרגע", en: "The stream is unavailable right now" },
   language: { he: "שפה", en: "Language" },
+  topStories: { he: "הכותרות", en: "Top Stories" },
+  mostPopular: { he: "הכי נקראות", en: "Most Popular" },
   privacy: { he: "פרטיות", en: "Privacy" },
   support: { he: "תמיכה", en: "Support" },
   privacyLead: {

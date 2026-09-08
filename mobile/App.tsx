@@ -1,8 +1,12 @@
-import { Heebo_400Regular, Heebo_700Bold, Heebo_800ExtraBold } from "@expo-google-fonts/heebo";
-import { IBMPlexMono_400Regular, IBMPlexMono_500Medium } from "@expo-google-fonts/ibm-plex-mono";
+import { ArchivoBlack_400Regular } from "@expo-google-fonts/archivo-black";
+import { Heebo_800ExtraBold } from "@expo-google-fonts/heebo";
+import { IBMPlexMono_400Regular, IBMPlexMono_500Medium, IBMPlexMono_700Bold } from "@expo-google-fonts/ibm-plex-mono";
+import { Inter_400Regular, Inter_500Medium, Inter_700Bold, Inter_900Black } from "@expo-google-fonts/inter";
+import { SourceSerif4_400Regular } from "@expo-google-fonts/source-serif-4";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import * as SystemUI from "expo-system-ui";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -15,13 +19,14 @@ import { RadioDock } from "./src/RadioDock";
 import { color } from "./src/theme";
 
 void SplashScreen.preventAutoHideAsync();
+void SystemUI.setBackgroundColorAsync(color.charcoal);
 
 function Root() {
   const [screen, setScreen] = useState<ScreenId>("news");
 
   return (
     <View style={styles.shell}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <Masthead screen={screen} onScreen={setScreen} />
       <View style={styles.body}>{screen === "news" ? <NewsScreen /> : <PodcastsScreen />}</View>
       <RadioDock />
@@ -31,11 +36,16 @@ function Root() {
 
 export default function App() {
   const [loaded] = useFonts({
-    Heebo_400Regular,
-    Heebo_700Bold,
+    ArchivoBlack_400Regular,
     Heebo_800ExtraBold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_700Bold,
+    Inter_900Black,
+    SourceSerif4_400Regular,
     IBMPlexMono_400Regular,
     IBMPlexMono_500Medium,
+    IBMPlexMono_700Bold,
   });
 
   useEffect(() => {
@@ -58,7 +68,7 @@ export default function App() {
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
-    backgroundColor: color.board,
+    backgroundColor: color.charcoal,
   },
   body: {
     flex: 1,
